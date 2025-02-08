@@ -11,18 +11,18 @@ export default function Chat() {
     e.preventDefault();
     setLoading(true);
     setResponse("");
-
+    console.log(question)
     try {
-      const res = await fetch("/api/ask", {
+      const res = await fetch("http://localhost:8000/retrieve", { // Directly calling FastAPI
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ question }),
+        body: JSON.stringify({ query: question }), // Updated to match FastAPI request format
       });
 
       if (!res.ok) throw new Error("Failed to fetch response");
 
       const data = await res.json();
-      setResponse(data.answer || "No response");
+      setResponse(JSON.stringify(data.response, null, 2)); // Show response in JSON format
     } catch (error) {
       console.error("Error:", error);
       setResponse("Error fetching response");
@@ -50,7 +50,9 @@ export default function Chat() {
         </button>
       </form>
       {response && (
-        <p className="mt-4 p-2 bg-gray-200 border rounded w-full">Response: {response}</p>
+        <pre className="mt-4 p-2 bg-gray-200 border rounded w-full whitespace-pre-wrap">
+          Response: {response}
+        </pre>
       )}
     </div>
   );

@@ -1,4 +1,5 @@
 "use client"
+import Link from "next/link";
 
 export default function Header(){
     return(
@@ -30,7 +31,7 @@ export default function Header(){
                 </li>
 
                 <li>
-                    <a className="text-gray-500 transition hover:text-gray-500/75" href="#"> Retriever </a>
+                    <a className="text-gray-500 transition hover:text-gray-500/75" href="/chat/retriever"> Retriever </a>
                 </li>
                 </ul>
             </nav>
