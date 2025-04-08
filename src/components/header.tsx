@@ -27,7 +27,7 @@ export default function Header(){
                 </li>
 
                 <li>
-                    <a className="text-gray-500 transition hover:text-gray-500/75" href="#"> Legal Q&A </a>
+                    <a className="text-gray-500 transition hover:text-gray-500/75" href="/chat/qna"> Legal Q&A </a>
                 </li>
 
                 <li>

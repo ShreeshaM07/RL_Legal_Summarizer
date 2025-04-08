@@ -1,4 +1,4 @@
-import Chat from "@/app/chat/chat_window";
+import Chat from "@/app/chat/retriever/chat_retriever";
 import Header from "@/components/header";
 
 export default function Home() {
