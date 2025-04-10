@@ -5,7 +5,9 @@ from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
 from pinecone import Pinecone, ServerlessSpec
 import os
+import random
 from dotenv import load_dotenv
+import time
 
 load_dotenv()
 app = FastAPI()
@@ -78,7 +80,7 @@ def isSimilarQuery(query):
         legal_index = pc.Index(index_name)
 
         top_k = 3
-        for i in range(1, 41):
+        for i in range(1, 42):
             namespace = f"ind_{i}"
             try:
                 results = legal_index.query(
@@ -199,3 +201,161 @@ def process_query(query):
         "retrieved_contexts": retrieved_results,
         "answer": answer
     }
+
+def process_newdata_query(query,document_text):
+    chunks = chunk_text(document_text)
+    namespace,success = upsert_new_chunked_text(chunks)
+    print(success)
+    if success:
+        print("Retrieving similar documents...")
+        retrieved_results = retrieve_when_doc_given(namespace,query)
+        print(f"Type of retrieved_results: {type(retrieved_results)}")
+        
+        print("Generating answer...")
+        answer = generate_answer(query, retrieved_results)
+        
+        return {
+            "query": query,
+            "retrieved_contexts": retrieved_results,
+            "answer": answer
+        }
+    else:
+        return {
+            "query": query,
+            "answer":"Failed to upsert documents please try again"
+        }
+
+import nltk
+from nltk.tokenize import sent_tokenize, word_tokenize
+nltk.download("punkt_tab")  # Download NLTK tokenizer model
+
+def chunk_text(text, max_tokens=505):
+    """Splits text into chunks of max 505 tokens while keeping sentence structure intact."""
+    sentences = sent_tokenize(text)  # Split into sentences
+    chunks = []
+    current_chunk = []
+    current_length = 0
+
+    for sentence in sentences:
+        words = word_tokenize(sentence)  # Tokenize words
+        sentence_length = len(words)
+
+        if current_length + sentence_length > max_tokens:
+            if current_chunk:
+                chunks.append(" ".join(current_chunk))  # Save previous chunk
+            current_chunk = words  # Start new chunk
+            current_length = sentence_length
+        else:
+            current_chunk.extend(words)
+            current_length += sentence_length
+
+    if current_chunk:
+        chunks.append(" ".join(current_chunk))  # Add last chunk
+
+    return chunks
+
+def upsert_new_chunked_text(chunks):
+    data = []
+    for j in range(len(chunks)):
+        data.append({'id':'ns_'+str(random.randint(75000,1000000))+'_'+str(j),'text':chunks[j],'summary':'NA'})
+
+    for i in range(len(data)):
+        namespace_count = 41
+        try:
+            datas = []
+            embeddings = []
+            for j in range(1,3):
+                # Slice the data batch
+                s = i+(j-1)*96
+                if s>=len(data):
+                    break
+                e = min(i+j*96,len(data))
+                datas.append(data[s:e])
+                # Generate embeddings
+                emb = pc_duplicate.inference.embed(
+                    model="multilingual-e5-large",
+                    inputs=[d['text'] for d in datas[j-1]],
+                    parameters={"input_type": "passage", "truncate": "END"}
+                )
+                embeddings.append(emb) 
+                time.sleep(15)
+
+            # Prepare records for Pinecone
+            records = []
+            for j in range(len(datas)):
+                for d, e in zip(datas[j], embeddings[j]):
+                    try:
+                        # # Truncate text if metadata exceeds the limit
+                        truncated_text = d['text']
+                        summary_text = d['summary']
+                        
+                        # Add the record
+                        records.append({
+                            "id": d['id'],
+                            "values": e['values'],
+                            "metadata": {"text": truncated_text,'summary':summary_text}
+                        })
+                    except Exception as inner_error:
+                        print(f"Error processing record ID {d['id']}: {inner_error}")
+                
+            # Upsert records into the Pinecone index
+            pinecone_index = pc.Index(index_name)
+            pinecone_index.upsert(
+                vectors=records,
+                namespace=f"ind_{namespace_count}"
+            )
+            return namespace_count,True
+        except Exception as batch_error:
+            print(f"Error processing batch {i}: {batch_error}")
+            return namespace_count,False
+
+def retrieve_when_doc_given(namespace,query):
+    # when a file is uploaded then other type of retrieval
+    try:
+        query_embedding = pc_duplicate.inference.embed(
+            model="multilingual-e5-large",
+            inputs=[query],
+            parameters={
+                "input_type": "query"
+            }
+        )
+
+        query_vector = query_embedding[0].values
+
+        # If not found, search all legal document namespaces
+        best_match = None
+        best_score = -1.0
+        best_namespace = None
+
+        legal_index = pc.Index(index_name)
+
+        top_k = 3
+        try:
+            results = legal_index.query(
+                namespace=f"ind_{namespace}",
+                vector=query_vector,
+                top_k=top_k,
+                include_values=False,
+                include_metadata=True
+            )
+
+            for match in results['matches']:
+                if match and match['score'] > best_score:
+                    best_score = match['score']
+                    best_match = match
+                    best_namespace = namespace
+
+        except Exception as ns_err:
+            print(f"Error querying namespace {namespace}: {ns_err}")
+
+
+        if best_match:
+            # Add the query to the q_ind namespace for future lookup
+            best_match['metadata']['query'] = query
+            return best_match['metadata']['text']
+
+        return "No relevant information found in any namespace."
+
+    except Exception as e:
+        print(f"Error in isSimilarQuery: {e}")
+        raise HTTPException(status_code=500, detail="Error processing query")

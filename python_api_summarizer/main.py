@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
 from pinecone import Pinecone, ServerlessSpec
-from rag import generate_answer, process_query, isSimilarQuery
+from rag import generate_answer, process_query, isSimilarQuery, process_newdata_query
 import os
 from dotenv import load_dotenv
 
@@ -45,6 +45,10 @@ async def ask_model(request: QueryRequest):
 @app.post("/qna")
 async def ask_qna_model(request: QnARequest):
     print(f"QnA Question: {request.query}")
-    response = process_query(request.query)
+    response = {}
+    if request.document_text != '': # If casefile is not uploaded
+        response = process_newdata_query(request.query,request.document_text)
+    else:       
+        response = process_query(request.query)
     print(f"\nGenerated Answer: {response['answer']}")
     return {"response": response["answer"]}
