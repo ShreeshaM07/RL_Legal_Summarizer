@@ -65,7 +65,7 @@ async def ask_summary_model(request: SummaryRequest):
     print(f"Document text: {request.document_text}")
     doc_text = clean_text(request.document_text)
     # External model endpoint
-    summarizer_url = "https://b6c0-35-199-180-21.ngrok-free.app/summarize"
+    summarizer_url = os.getenv("SUMMARIZER_URL")
 
     payload = {"text": doc_text}
 
