@@ -3,7 +3,6 @@
 import { useState, ChangeEvent, FormEvent } from "react";
 
 export default function Chat() {
-  const [question, setQuestion] = useState<string>("");
   const [response, setResponse] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
   const [fileContent, setFileContent] = useState<string>("");
@@ -18,7 +17,7 @@ export default function Chat() {
         setFileContent(text);
       };
 
-      reader.readAsText(file); // For PDF or DOCX, you'll need another method
+      reader.readAsText(file); // Assumes .txt; use other logic for PDF/DOCX
     }
   };
 
@@ -29,23 +28,22 @@ export default function Chat() {
 
     try {
       const payload = {
-        query: question,
         document_text: fileContent,
       };
 
-      const res = await fetch("http://localhost:8000/qna", {
+      const res = await fetch("http://localhost:8000/summarize", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
 
-      if (!res.ok) throw new Error("Failed to fetch response");
+      if (!res.ok) throw new Error("Failed to fetch summary");
 
       const data = await res.json();
-      setResponse(JSON.stringify(data.response, null, 2));
+      setResponse(JSON.stringify(data.summary, null, 2));
     } catch (error) {
       console.error("Error:", error);
-      setResponse("Error fetching response");
+      setResponse("Error fetching summary");
     }
 
     setLoading(false);
@@ -54,35 +52,30 @@ export default function Chat() {
   return (
     <div className="flex flex-col items-center w-full max-w-4xl p-4 bg-white shadow-md rounded-lg">
       <form onSubmit={handleSubmit} className="w-full space-y-3">
-        {"Upload the Legal Document to process"}
+        <label htmlFor="file-upload" className="block text-sm font-medium text-gray-700">
+          Upload the Legal Document to summarize
+        </label>
         <input
+          id="file-upload"
           type="file"
-          accept=".txt" // PDF/DOCX not supported via readAsText()
+          accept=".txt"
           onChange={handleFileChange}
           className="w-full border border-gray-300 rounded p-2"
-        />
-
-        <input
-          type="text"
-          className="p-2 border border-gray-300 rounded w-full"
-          placeholder="Type your legal question..."
-          value={question}
-          onChange={(e) => setQuestion(e.target.value)}
           required
         />
 
         <button
           type="submit"
           className="w-full bg-blue-600 text-white py-2 rounded disabled:opacity-50"
-          disabled={loading}
+          disabled={loading || !fileContent}
         >
-          {loading ? "Thinking..." : "Ask"}
+          {loading ? "Summarizing..." : "Summarize"}
         </button>
       </form>
 
       {response && (
         <pre className="mt-4 p-2 bg-gray-200 border rounded w-full whitespace-pre-wrap">
-          Response: {response}
+          Summary: {response}
         </pre>
       )}
     </div>

@@ -31,7 +31,7 @@ export default function Chat() {
   };
 
   return (
-    <div className="flex flex-col items-center w-full max-w-md p-4 bg-white shadow-md rounded-lg">
+    <div className="flex flex-col items-center w-full max-w-4xl p-4 bg-white shadow-md rounded-lg">
       <form onSubmit={handleSubmit} className="w-full">
         <input
           type="text"

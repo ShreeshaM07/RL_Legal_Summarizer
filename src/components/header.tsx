@@ -23,7 +23,7 @@ export default function Header(){
                 </li>
 
                 <li>
-                    <a className="text-gray-500 transition hover:text-gray-500/75" href="#"> Summarizer </a>
+                    <a className="text-gray-500 transition hover:text-gray-500/75" href="/chat/summarizer"> Summarizer </a>
                 </li>
 
                 <li>
@@ -37,7 +37,7 @@ export default function Header(){
             </nav>
 
             <div className="flex items-center gap-4">
-                <div className="sm:flex sm:gap-4">
+                {/* <div className="sm:flex sm:gap-4">
                 <a
                     className="block rounded-md bg-teal-600 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-teal-700"
                     href="#"
@@ -51,7 +51,7 @@ export default function Header(){
                 >
                     Register
                 </a>
-                </div>
+                </div> */}
 
                 <button
                 className="block rounded-sm bg-gray-100 p-2.5 text-gray-600 transition hover:text-gray-600/75 md:hidden"

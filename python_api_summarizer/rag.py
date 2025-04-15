@@ -8,6 +8,7 @@ import os
 import random
 from dotenv import load_dotenv
 import time
+import re
 
 load_dotenv()
 app = FastAPI()
@@ -359,3 +360,10 @@ def retrieve_when_doc_given(namespace,query):
     except Exception as e:
         print(f"Error in isSimilarQuery: {e}")
         raise HTTPException(status_code=500, detail="Error processing query")
+
+def clean_text(text: str) -> str:
+    # Replace any character that's not a letter, digit, or whitespace with a space.
+    cleaned = re.sub(r'[^A-Za-z0-9\s]', ' ', text)
+    # Replace one or more whitespace characters with a single space and remove leading/trailing spaces.
+    cleaned = re.sub(r'\s+', ' ', cleaned).strip()
+    return cleaned

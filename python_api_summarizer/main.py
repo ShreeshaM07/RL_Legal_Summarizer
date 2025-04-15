@@ -2,9 +2,11 @@ from fastapi import FastAPI
 from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
 from pinecone import Pinecone, ServerlessSpec
-from rag import generate_answer, process_query, isSimilarQuery, process_newdata_query
+from rag import generate_answer, process_query, isSimilarQuery, process_newdata_query,clean_text
 import os
 from dotenv import load_dotenv
+import httpx
+
 
 load_dotenv()
 app = FastAPI()
@@ -36,6 +38,9 @@ class QnARequest(BaseModel):
     query: str
     document_text: str 
 
+class SummaryRequest(BaseModel):
+    document_text: str 
+
 @app.post("/retrieve")
 async def ask_model(request: QueryRequest):
     print(f"Query for retrieval: {request.query}")
@@ -52,3 +57,22 @@ async def ask_qna_model(request: QnARequest):
         response = process_query(request.query)
     print(f"\nGenerated Answer: {response['answer']}")
     return {"response": response["answer"]}
+
+
+
+@app.post("/summarize")
+async def ask_summary_model(request: SummaryRequest):
+    print(f"Document text: {request.document_text}")
+    doc_text = clean_text(request.document_text)
+    # External model endpoint
+    summarizer_url = "https://b6c0-35-199-180-21.ngrok-free.app/summarize"
+
+    payload = {"text": doc_text}
+
+    async with httpx.AsyncClient(timeout=60.0) as client:
+        response = await client.post(summarizer_url, json=payload)
+        response.raise_for_status()  # Raise error if status not 200 OK
+        result = response.json()
+
+    print(f"Summary: {result}")
+    return {"summary": result.get("summary", "No summary returned")}
