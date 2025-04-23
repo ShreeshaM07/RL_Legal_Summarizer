@@ -31,7 +31,7 @@ export default function Chat() {
         document_text: fileContent,
       };
 
-      const res = await fetch("http://localhost:8000/summarize", {
+      const res = await fetch("https://rl-backend-legal-summarizer.onrender.com/summarize", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),

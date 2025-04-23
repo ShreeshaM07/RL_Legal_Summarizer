@@ -33,7 +33,7 @@ export default function Chat() {
         document_text: fileContent,
       };
 
-      const res = await fetch("http://localhost:8000/qna", {
+      const res = await fetch("https://rl-backend-legal-summarizer.onrender.com/qna", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),

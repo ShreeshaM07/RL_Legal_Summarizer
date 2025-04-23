@@ -13,7 +13,7 @@ export default function Chat() {
     setResponse("");
     console.log(question)
     try {
-      const res = await fetch("http://localhost:8000/retrieve", { // Directly calling FastAPI
+      const res = await fetch("https://rl-backend-legal-summarizer.onrender.com/retrieve", { // Directly calling FastAPI
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ query: question }), // Updated to match FastAPI request format
