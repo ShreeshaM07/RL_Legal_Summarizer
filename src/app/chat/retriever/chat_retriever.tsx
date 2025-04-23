@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-export default function Chat() {
+export default function ChatRetriever() {
   const [question, setQuestion] = useState<string>("");
   const [response, setResponse] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
