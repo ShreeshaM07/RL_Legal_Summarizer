@@ -69,7 +69,7 @@ async def ask_summary_model(request: SummaryRequest):
 
     payload = {"text": doc_text}
 
-    async with httpx.AsyncClient(timeout=60.0) as client:
+    async with httpx.AsyncClient(timeout=300.0) as client:
         response = await client.post(summarizer_url, json=payload)
         response.raise_for_status()  # Raise error if status not 200 OK
         result = response.json()
