@@ -1,10 +1,14 @@
 "use client"
 
+import { useState } from "react";
+
 export default function Header(){
+    const [isMenuOpen, setIsMenuOpen] = useState(false);
+
     return(
         <header className="bg-white">
         <div className="mx-auto flex h-16 max-w-screen-xl items-center gap-8 px-4 sm:px-6 lg:px-8">
-            <a className="block text-teal-600" href="#">
+            <a className="block text-teal-600" href="/">
             <span className="sr-only">Home</span>
             <svg className="h-8" viewBox="0 0 28 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path
@@ -54,6 +58,7 @@ export default function Header(){
 
                 <button
                 className="block rounded-sm bg-gray-100 p-2.5 text-gray-600 transition hover:text-gray-600/75 md:hidden"
+                onClick={() => setIsMenuOpen(!isMenuOpen)}
                 >
                 <span className="sr-only">Toggle menu</span>
                 <svg
@@ -70,6 +75,16 @@ export default function Header(){
             </div>
             </div>
         </div>
+        {isMenuOpen && (
+        <nav className="md:hidden px-4 pb-4">
+          <ul className="space-y-2 text-sm">
+            <li><a className="block text-gray-700 hover:text-gray-900" href="#">About</a></li>
+            <li><a className="block text-gray-700 hover:text-gray-900" href="/chat/summarizer">Summarizer</a></li>
+            <li><a className="block text-gray-700 hover:text-gray-900" href="/chat/qna">Legal Q&A</a></li>
+            <li><a className="block text-gray-700 hover:text-gray-900" href="/chat/retriever">Retriever</a></li>
+          </ul>
+        </nav>
+      )}
         </header>
     );
 
